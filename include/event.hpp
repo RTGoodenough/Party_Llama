@@ -6,12 +6,6 @@
 
 namespace pllama {
 template <typename e_type>
-using Callback = std::function<void(const e_type&)>;
-
-template <typename e_type>
-using Callback_Vec = std::vector<Callback<e_type>>;
-
-template <typename e_type>
 using Handler = std::function<void(const e_type&)>;
 
 template <typename e_type>

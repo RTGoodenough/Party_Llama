@@ -56,10 +56,19 @@ TEST(ImmediateEvents, DifferentCallbackTypes) {
 
   pllama::EventSystem_Immediate<TestEvent> sut;
 
-  auto test1 = [](const TestEvent& event) {
+  auto lambda = [](const TestEvent& event) {
     EXPECT_EQ(event.integer, 1);
     EXPECT_EQ(event.character, 'c');
     addCall("lambda");
+  };
+
+  //NOLINTNEXTLINE
+  int  capture = 5;
+  auto captureLambda = [capture](const TestEvent& event) {
+    EXPECT_EQ(event.integer, 1);
+    EXPECT_EQ(capture, 5);
+    EXPECT_EQ(event.character, 'c');
+    addCall("capture_lambda");
   };
 
   struct Functor {
@@ -72,7 +81,8 @@ TEST(ImmediateEvents, DifferentCallbackTypes) {
 
   Functor testFunctor{};
 
-  sut.on<TestEvent>(test1);
+  sut.on<TestEvent>(lambda);
+  sut.on<TestEvent>(captureLambda);
   sut.on<TestEvent>(Functor{});
   sut.on<TestEvent>(testFunctor);
   sut.on<TestEvent>(testFunc);
@@ -81,6 +91,7 @@ TEST(ImmediateEvents, DifferentCallbackTypes) {
 
   EXPECT_EQ(called["functor"], 2);
   EXPECT_EQ(called["lambda"], 1);
+  EXPECT_EQ(called["capture_lambda"], 1);
   EXPECT_EQ(called["function"], 1);
 }
 
@@ -128,4 +139,33 @@ TEST(ImmediateEvents, MultipleEventTypes) {
   EXPECT_EQ(called["thirdEvent"], 1);
 }
 
-TEST(ImmediateEvents, RemoveCallback) {}
+TEST(ImmediateEvents, RemoveCallback) {
+  pllama::EventSystem_Immediate<TestEvent> sut;
+
+  auto testEventCB1 = [](const TestEvent& event) {
+    EXPECT_EQ(event.integer, 1);
+    EXPECT_EQ(event.character, 'c');
+    addCall("testEvent1");
+  };
+
+  auto testEventCB2 = [](const TestEvent& event) {
+    EXPECT_EQ(event.integer, 1);
+    EXPECT_EQ(event.character, 'c');
+    addCall("testEvent2");
+  };
+
+  auto id1 = sut.on<TestEvent>(testEventCB1);
+  auto id2 = sut.on<TestEvent>(testEventCB2);
+
+  sut.emit<TestEvent>({1, 'c'});
+
+  EXPECT_EQ(called["testEvent1"], 1);
+  EXPECT_EQ(called["testEvent2"], 1);
+
+  sut.remove<TestEvent>(id1);
+
+  sut.emit<TestEvent>({1, 'c'});
+
+  EXPECT_EQ(called["testEvent1"], 1);
+  EXPECT_EQ(called["testEvent2"], 2);
+}

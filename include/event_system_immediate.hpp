@@ -7,16 +7,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "callback.hpp"
 #include "concepts.hpp"
-#include "event.hpp"
-
-/*
-ISSUES:
-
-1. Callbacks for different event types may have the same cb_UID
-
-
-*/
 
 namespace pllama {
 /**
@@ -37,7 +29,7 @@ class EventSystem_Immediate {
   void emit(const e_type& data) {
     auto& cbs = get_callbacks<e_type>();
     for (auto& callback : cbs) {
-      callback(data);
+      callback.cb(data);
     }
   }
 
@@ -51,28 +43,30 @@ class EventSystem_Immediate {
   template <typename e_type, typename = std::enable_if<inTypeList<e_type, e_types...>()>>
   auto on(Callback<e_type>&& callback) -> cb_UID {
     auto& callbacks = get_callbacks<e_type>();
-    callbacks.emplace_back(callback);
+    auto  cbid = _current;
+
+    callbacks.push_back({cbid, std::forward<Callback<e_type>>(callback)});
+    ++_current;
     return callbacks.size() - 1;
   }
 
   /**
-   * @brief Removes a callback for an event
+   * @brief Removes the callback with the provided id, does nothing if no callback exists
    * 
    * @tparam e_type : event type
    * @param cb_id : callback id
    */
   template <typename e_type, typename = std::enable_if<inTypeList<e_type, e_types...>()>>
-  auto remove(cb_UID cb_id) -> bool {
+  void remove(cb_UID cb_id) {
     auto& callbacks = get_callbacks<e_type>();
-
-    if (cb_id >= callbacks.size()) return false;
-
-    callbacks.erase(callbacks.begin() + cb_id);
-    return true;
+    callbacks.erase(std::remove_if(callbacks.begin(), callbacks.end(),
+                                   [cb_id](CB<e_type>& val) { return val.id == cb_id; }),
+                    callbacks.end());
   }
 
  private:
   std::tuple<Callback_Vec<e_types>...> _callbacks;
+  cb_UID                               _current = 0;
 
   /**
    * @brief Gets the vector of callbacks for an event type
@@ -81,7 +75,7 @@ class EventSystem_Immediate {
    * @return Callback_Vec<e_type>& : callbacks vector
    */
   template <typename e_type>
-  auto get_callbacks() -> Callback_Vec<e_type>& {
+  [[nodiscard]] auto get_callbacks() -> Callback_Vec<e_type>& {
     return std::get<Callback_Vec<e_type>>(_callbacks);
   }
 
