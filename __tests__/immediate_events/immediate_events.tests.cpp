@@ -4,9 +4,12 @@
 
 #include "event_system_immediate.hpp"
 
+namespace {
 // NOLINTNEXTLINE
 static std::unordered_map<std::string, int> called{};
+}  // namespace
 
+namespace {
 void addCall(const std::string& call) {
   if (called.find(call) == called.end()) {
     called[call] = 1;
@@ -14,6 +17,7 @@ void addCall(const std::string& call) {
     called[call] += 1;
   }
 }
+}  // namespace
 
 struct TestEvent {
   int  integer;

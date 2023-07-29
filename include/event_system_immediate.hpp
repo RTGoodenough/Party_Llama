@@ -27,7 +27,7 @@ class EventSystem_Immediate {
    */
   template <typename e_type, typename = std::enable_if<inTypeList<e_type, e_types...>()>>
   void emit(const e_type& data) {
-    auto& cbs = get_callbacks<e_type>();
+    auto& cbs = _callbacks.template get_callbacks<e_type>();
     for (auto& callback : cbs) {
       callback.cb(data);
     }
@@ -40,14 +40,9 @@ class EventSystem_Immediate {
    * @param callback : callback function
    * @return cb_UID : id of callback
    */
-  template <typename e_type, typename = std::enable_if<inTypeList<e_type, e_types...>()>>
+  template <typename e_type, typename = std::enable_if_t<inTypeList<e_type, e_types...>()>>
   auto on(Callback<e_type>&& callback) -> cb_UID {
-    auto& callbacks = get_callbacks<e_type>();
-    auto  cbid = _current;
-
-    callbacks.push_back({cbid, std::forward<Callback<e_type>>(callback)});
-    ++_current;
-    return callbacks.size() - 1;
+    return _callbacks.template add(std::forward<Callback<e_type>>(callback));
   }
 
   /**
@@ -56,28 +51,13 @@ class EventSystem_Immediate {
    * @tparam e_type : event type
    * @param cb_id : callback id
    */
-  template <typename e_type, typename = std::enable_if<inTypeList<e_type, e_types...>()>>
+  template <typename e_type, typename = std::enable_if_t<inTypeList<e_type, e_types...>()>>
   void remove(cb_UID cb_id) {
-    auto& callbacks = get_callbacks<e_type>();
-    callbacks.erase(std::remove_if(callbacks.begin(), callbacks.end(),
-                                   [cb_id](CB<e_type>& val) { return val.id == cb_id; }),
-                    callbacks.end());
+    _callbacks.template remove<e_type>(cb_id);
   }
 
  private:
-  std::tuple<Callback_Vec<e_types>...> _callbacks;
-  cb_UID                               _current = 0;
-
-  /**
-   * @brief Gets the vector of callbacks for an event type
-   * 
-   * @tparam e_type : event type
-   * @return Callback_Vec<e_type>& : callbacks vector
-   */
-  template <typename e_type>
-  [[nodiscard]] auto get_callbacks() -> Callback_Vec<e_type>& {
-    return std::get<Callback_Vec<e_type>>(_callbacks);
-  }
+  CallbackContainer<e_types...> _callbacks;
 
  public:
   EventSystem_Immediate() = default;
