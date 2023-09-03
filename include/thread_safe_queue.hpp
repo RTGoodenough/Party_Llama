@@ -31,11 +31,21 @@ class Queue {
   void shutdown() {
     std::unique_lock lock{_mutex};
     _shutdown = true;
-    _cond_var.notify_all();
+    _block = true;
     _queue.clear();
+    _cond_var.notify_all();
+    _empty_wait.notify_all();
   }
 
-  void wait_shutdown() {}
+  /**
+   * @brief Waits for all queued work to be completed
+   * 
+   */
+  void wait() {
+    std::unique_lock lock{_mutex};
+    _block = true;
+    _empty_wait.wait(lock, [&] { return _queue.empty(); });
+  }
 
   /**
    * @brief Waits for an element to be on the queue, removes it
@@ -49,6 +59,7 @@ class Queue {
 
     std::list<d_type> temp;
     temp.splice(temp.begin(), _queue, _queue.begin());
+    _empty_wait.notify_all();
     return temp;
   }
 
@@ -56,6 +67,7 @@ class Queue {
   std::list<d_type>       _queue;
   std::mutex              _mutex;
   std::condition_variable _cond_var;
+  std::condition_variable _empty_wait;
   bool                    _shutdown = false;
   bool                    _block = false;
 };

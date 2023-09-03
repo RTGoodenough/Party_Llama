@@ -61,12 +61,10 @@ TEST(AsyncEvents, Test) {
 
   sut.emit<TestEvent>({1, 'c'});
 
-  sleep(1);
+  sut.wait_shutdown();
 
   EXPECT_EQ(called["handler1"], 1);
   EXPECT_EQ(called["handler2"], 1);
   EXPECT_EQ(called["handler3"], 1);
   EXPECT_EQ(called["handler4"], 1);
-
-  sut.wait_shutdown();
 }

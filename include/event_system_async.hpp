@@ -48,7 +48,10 @@ class EventSystem_Async {
     }
   }
 
-  void wait_shutdown() { _workQueue.wait_shutdown(); }
+  void wait_shutdown() {
+    _workQueue.wait();
+    shutdown();
+  }
 
   /**
    * @brief Removes a handler for an event type
