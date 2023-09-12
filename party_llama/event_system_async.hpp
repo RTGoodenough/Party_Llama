@@ -24,6 +24,17 @@ class EventSystem_Async {
     }
   }
 
+  void set_threads(size_t thread_cnt) {
+    _workQueue.block_new();
+    while (!_workQueue.is_empty()) {
+    }
+
+    _threads.resize(thread_cnt);
+    for (size_t i = 0; i < thread_cnt; ++i) {
+      _threads.at(i) = std::thread(&EventSystem_Async::work, this);
+    }
+  }
+
   /**
    * @brief Adds an event handler for a given event type
    * 
@@ -49,7 +60,9 @@ class EventSystem_Async {
   }
 
   void wait_shutdown() {
-    _workQueue.wait();
+    _workQueue.block_new();
+    while (!_workQueue.is_empty()) {
+    }
     shutdown();
   }
 
@@ -99,6 +112,14 @@ class EventSystem_Async {
       wrk.front()->run();
     }
   }
+
+ public:
+  EventSystem_Async() = default;
+  EventSystem_Async(const EventSystem_Async&) = default;
+  EventSystem_Async(EventSystem_Async&&) noexcept = default;
+  auto operator=(const EventSystem_Async&) -> EventSystem_Async& = default;
+  auto operator=(EventSystem_Async&&) noexcept -> EventSystem_Async& = default;
+  ~EventSystem_Async() = default;
 };
 }  // namespace pllama
 
