@@ -1,3 +1,16 @@
+/**
+ * @file thread_safe_queue.hpp
+ * @author Rolland Goodenough (goodenoughr@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 2023-10-09
+ * 
+ * @copyright Copyright 2023 Rolland Goodenough
+ * 
+ * This file is part of Party Llama which is released under the MIT License
+ * See file LICENSE for the full License
+ */
+
 #ifndef PARTY_LLAMA_THREAD_SAFE_QUEUE_HPP
 #define PARTY_LLAMA_THREAD_SAFE_QUEUE_HPP
 
@@ -36,16 +49,30 @@ class Queue {
     _cond_var.notify_all();
   }
 
+  /**
+   * @brief Prevents new work from being added to the queue
+   * 
+   */
   void block_new() {
     std::unique_lock lock{_mutex};
     _block = true;
   }
 
+  /**
+   * @brief Allows new work to be added to the queue
+   * 
+   */
   void unblock_new() {
     std::unique_lock lock{_mutex};
     _block = false;
   }
 
+  /**
+   * @brief Returns true if the queue is empty
+   * 
+   * @return true 
+   * @return false 
+   */
   [[nodiscard]] auto is_empty() -> bool {
     std::unique_lock lock{_mutex};
     return _queue.empty();

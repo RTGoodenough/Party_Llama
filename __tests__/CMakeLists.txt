@@ -9,7 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED)
 
-set(INCLUDE_DIR ./../include)
+set(INCLUDE_DIR ./../party_llama)
 
 include(FetchContent)
 FetchContent_Declare(

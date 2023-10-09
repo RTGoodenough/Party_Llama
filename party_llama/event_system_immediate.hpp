@@ -1,7 +1,19 @@
+/**
+ * @file event_system_immediate.hpp
+ * @author Rolland Goodenough (goodenoughr@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 2023-10-09
+ * 
+ * @copyright Copyright 2023 Rolland Goodenough
+ * 
+ * This file is part of Party Llama which is released under the MIT License
+ * See file LICENSE for the full License
+ */
+
 #ifndef PARTY_LLAMA_EVENT_SYSTEM_IMMEDIATE_HPP
 #define PARTY_LLAMA_EVENT_SYSTEM_IMMEDIATE_HPP
 
-#include <pstl/glue_algorithm_defs.h>
 #include <functional>
 #include <tuple>
 #include <type_traits>

@@ -1,3 +1,16 @@
+/**
+ * @file event_system_async.hpp
+ * @author Rolland Goodenough (goodenoughr@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 2023-10-09
+ * 
+ * @copyright Copyright 2023 Rolland Goodenough
+ * 
+ * This file is part of Party Llama which is released under the MIT License
+ * See file LICENSE for the full License
+ */
+
 #ifndef PARTY_LLAMA_EVENT_ASYNC_HPP
 #define PARTY_LLAMA_EVENT_ASYNC_HPP
 
@@ -24,6 +37,11 @@ class EventSystem_Async {
     }
   }
 
+  /**
+   * @brief Sets the number of threads, removing or adding to match
+   * 
+   * @param thread_cnt 
+   */
   void set_threads(size_t thread_cnt) {
     _workQueue.block_new();
     while (!_workQueue.is_empty()) {
@@ -33,6 +51,7 @@ class EventSystem_Async {
     for (size_t i = 0; i < thread_cnt; ++i) {
       _threads.at(i) = std::thread(&EventSystem_Async::work, this);
     }
+    _workQueue.unblock_new();
   }
 
   /**
@@ -59,6 +78,10 @@ class EventSystem_Async {
     }
   }
 
+  /**
+   * @brief Stops threads from getting new work, waits for all queued work to finish, then shutdowns
+   * 
+   */
   void wait_shutdown() {
     _workQueue.block_new();
     while (!_workQueue.is_empty()) {
